@@ -21,4 +21,6 @@ services:
     volumes:
       - redis_data:/data
 
-
+volumes:
+  postgres_data:
+  redis_data:

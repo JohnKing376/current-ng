@@ -10,8 +10,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const logger = app.get(Logger);
   const configService = app.get(ConfigService);
-  const APP_NAME = configService.get<string>('APP_NAME');
-  const PORT = configService.get<number>('PORT');
+  const APP_NAME = configService.getOrThrow<string>('APP_NAME');
+  const PORT = configService.getOrThrow<number>('PORT');
 
   app.useLogger(logger);
 
@@ -47,9 +47,9 @@ async function bootstrap() {
     useGlobalPrefix: false,
   });
 
-  await app.listen(PORT!);
+  await app.listen(PORT);
 
-  logger.log(`${APP_NAME} server listening on port:${PORT!}`);
+  logger.log(`${APP_NAME} server listening on port:${PORT}`);
 }
 
 bootstrap();

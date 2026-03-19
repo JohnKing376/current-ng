@@ -1,0 +1,19 @@
+model Location {
+  id                String   @id @default(uuid())
+  lga               String
+  state             String
+  lat               Float
+  lng               Float
+  discoZone         String?
+  populationDensity Int      @default(0)
+  createdAt         DateTime @default(now())
+
+  reports           Report[]
+  outageEvents      OutageEvent[]
+  userSubscriptions UserSubscription[]
+  webhookSubs       WebhookSubscription[]
+
+  @@unique([lga, state])
+  @@index([state])
+}
+

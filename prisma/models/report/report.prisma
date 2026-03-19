@@ -1,0 +1,26 @@
+enum Source {
+  USER
+  TWITTER
+}
+
+enum Status {
+  ON
+  OFF
+}
+
+model Report {
+  id                  String   @id @default(uuid())
+  locationId          String
+  status              Status
+  source              Source
+  reporterFingerprint String
+  trustScore          Float    @default(1.0)
+  reportedAt          DateTime @default(now())
+  expiresAt           DateTime
+  outageEventId       String?
+
+  location     Location     @relation(fields: [locationId], references: [id])
+  outageEvent  OutageEvent? @relation(fields: [outageEventId], references: [id])
+
+  @@index([locationId, expiresAt])
+}

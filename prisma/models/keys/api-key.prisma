@@ -1,0 +1,10 @@
+model ApiKey {
+  id          String    @id @default(uuid())
+  prefix      String    @unique
+  hashedKey   String    @unique
+  label       String
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  webhookSubs WebhookSubscription[]
+}

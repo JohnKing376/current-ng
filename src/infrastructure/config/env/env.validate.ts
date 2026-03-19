@@ -11,6 +11,7 @@ const EnvSchema = z.object({
   DB_PORT: z.coerce.number().default(5432),
   REDIS_PORT: z.coerce.number().default(6379),
   APP_NAME: z.string(),
+  DATABASE_URL: z.string(),
 });
 
 export function validate(config: Record<string, unknown>) {

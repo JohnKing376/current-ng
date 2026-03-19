@@ -1,0 +1,13 @@
+model UserSubscription {
+  id             String   @id @default(uuid())
+  userId         String
+  locationId     String
+  lastSearchedAt DateTime @default(now())
+  expiresAt      DateTime
+
+  user     User     @relation(fields: [userId], references: [id])
+  location Location @relation(fields: [locationId], references: [id])
+
+  @@unique([userId, locationId])
+  @@index([locationId, expiresAt])
+}

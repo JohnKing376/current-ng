@@ -1,0 +1,12 @@
+model WebhookSubscription {
+  id          String   @id @default(uuid())
+  locationId  String
+  callbackUrl String
+  apiKeyId    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  location Location @relation(fields: [locationId], references: [id])
+  apiKey   ApiKey   @relation(fields: [apiKeyId], references: [id])
+}
+

@@ -1,0 +1,20 @@
+enum Confidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model OutageEvent {
+  id           String     @id @default(uuid())
+  locationId   String
+  confidence   Confidence
+  reportsCount Int        @default(0)
+  startedAt    DateTime   @default(now())
+  resolvedAt   DateTime?
+  notified     Boolean    @default(false)
+
+  location Location @relation(fields: [locationId], references: [id])
+  reports  Report[]
+
+  @@index([locationId, resolvedAt])
+}

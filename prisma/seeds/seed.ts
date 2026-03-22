@@ -1,29 +1,57 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import { PrismaClient } from '../../src/generated/prisma/client';
-import allStates from '../models/lgas/statesAndLocaGov.json';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { parse } from 'csv-parse/sync';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('Seeding locations...');
+  const content = fs.readFileSync(
+    path.resolve(__dirname, '../models/lgas/Nigeria_Wards_Lat-Long1.csv'),
+    'utf-8',
+  );
 
-  for (const states of allStates) {
-    for (const lga of states.lgas) {
-      await prisma.location.upsert({
-        where: { lga_state: { lga, state: states.state } },
-        update: {},
-        create: {
-          lga,
-          state: states.state,
-          lat: Number(states.latitude ?? 0),
-          lng: Number(states.longitude ?? 0),
-        },
-      });
-    }
+  interface CsvRow {
+    ID_0: string;
+    Country: string;
+    ID_1: string;
+    State: string;
+    ID_2: string;
+    LGA: string;
+    ID_3: string;
+    Ward: string;
+    Latitude: string;
+    Longitude: string;
   }
 
-  console.log('Done — all LGAs seeded.');
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const rows = parse(content, {
+    columns: true,
+    skip_empty_lines: true,
+  }) as CsvRow[];
+
+  const seen = new Set<string>();
+
+  for (const row of rows) {
+    const key = `${row.LGA}__${row.State}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    await prisma.location.upsert({
+      where: { lga_state: { lga: row.LGA, state: row.State } },
+      update: {},
+      create: {
+        lga: row.LGA,
+        state: row.State,
+        lat: parseFloat(row.Latitude),
+        lng: parseFloat(row.Longitude),
+      },
+    });
+  }
+
+  console.log('Seeding Complete');
 }
 
 main()

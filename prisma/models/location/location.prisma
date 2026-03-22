@@ -16,4 +16,3 @@ model Location {
   @@unique([lga, state])
   @@index([state])
 }
-

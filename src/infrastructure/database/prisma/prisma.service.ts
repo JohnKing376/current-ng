@@ -10,6 +10,7 @@ export class PrismaService
 {
   constructor(private readonly configService: ConfigService) {
     const DATABASE_URL = configService.getOrThrow<string>('DATABASE_URL');
+
     const adapter = new PrismaPg({
       connectionString: DATABASE_URL,
     });

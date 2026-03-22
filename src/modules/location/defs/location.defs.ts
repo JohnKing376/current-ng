@@ -20,7 +20,6 @@ const StatusByLgaInputZ = z.object({
   lga: z.string(),
 });
 export type StatusByLgaInput = z.infer<typeof StatusByLgaInputZ>;
-export class StatusByLgaDto extends createZodDto(StatusByLgaInputZ) {}
 
 const OutageEventPublicZ = OutageEventSchema.omit({
   id: true,

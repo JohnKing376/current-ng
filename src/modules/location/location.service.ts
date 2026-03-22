@@ -16,10 +16,10 @@ export class LocationService {
   }
 
   async getStatusByLga(input: StatusByLgaInput) {
-    const { lga } = input;
+    const { lga, state } = input;
 
-    const location = await this.prisma.location.findFirst({
-      where: { lga: { equals: lga, mode: 'insensitive' } },
+    const location = await this.prisma.location.findUnique({
+      where: { lga_state: { lga, state } },
       include: {
         outageEvents: {
           where: { resolvedAt: null },
@@ -32,8 +32,9 @@ export class LocationService {
     if (!location) {
       this.logger.error('LGA not found', {
         lga,
+        state,
       });
-      throw new NotFoundException(`LGA "${lga}" not found`);
+      throw new NotFoundException(`LGA "${lga}" in state "${state}" not found`);
     }
 
     return {

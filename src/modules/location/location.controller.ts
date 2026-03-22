@@ -3,9 +3,10 @@ import { LocationService } from './location.service';
 import {
   LocationStatusResponseDto,
   StatusByCoordinatesDto,
+  StatusByLgaQueryDto,
 } from './defs/location.defs';
 import { ZodResponse } from 'nestjs-zod';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Location')
 @Controller('location')
@@ -24,12 +25,23 @@ export class LocationController {
 
   @Get(':lga')
   @ApiParam({ name: 'lga', type: 'string', description: 'The name of the LGA' })
+  @ApiQuery({
+    name: 'state',
+    type: 'string',
+    description: 'The state the LGA belongs to',
+  })
   @ZodResponse({
     type: LocationStatusResponseDto,
     status: HttpStatus.OK,
     description: 'Get location report with lga',
   })
-  async statusByLga(@Param('lga') lga: string) {
-    return await this.locationService.getStatusByLga({ lga });
+  async statusByLga(
+    @Param('lga') lga: string,
+    @Query() query: StatusByLgaQueryDto,
+  ) {
+    return await this.locationService.getStatusByLga({
+      lga,
+      state: query.state,
+    });
   }
 }

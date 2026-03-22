@@ -18,8 +18,14 @@ export class StatusByCoordinatesDto extends createZodDto(
 
 const StatusByLgaInputZ = z.object({
   lga: z.string(),
+  state: z.string(),
 });
 export type StatusByLgaInput = z.infer<typeof StatusByLgaInputZ>;
+
+const StatusByLgaQueryZ = z.object({
+  state: z.string(),
+});
+export class StatusByLgaQueryDto extends createZodDto(StatusByLgaQueryZ) {}
 
 const OutageEventPublicZ = OutageEventSchema.omit({
   id: true,

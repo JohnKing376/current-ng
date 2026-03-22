@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../infrastructure/database/prisma/prisma.service';
+import { PrismaService } from '@app/infrastructure/database/prisma/prisma.service';
 import type {
   StatusByCoordinatesInput,
   StatusByLgaInput,

@@ -3,7 +3,7 @@ import { createZodDto } from 'nestjs-zod';
 import {
   LocationSchema,
   OutageEventSchema,
-} from '../../../generated/schemas/models';
+} from '@app/generated/schemas/models';
 
 const StatusByCoordinatesInputZ = z.object({
   lat: z.coerce.number().min(-90).max(90),

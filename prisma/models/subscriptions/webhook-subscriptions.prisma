@@ -9,4 +9,3 @@ model WebhookSubscription {
   location Location @relation(fields: [locationId], references: [id])
   apiKey   ApiKey   @relation(fields: [apiKeyId], references: [id])
 }
-

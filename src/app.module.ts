@@ -5,9 +5,10 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { AppConfigModule } from './infrastructure/config/config.module';
 import { PrismaModule } from './infrastructure/database/prisma/prisma.module';
+import { LocationModule } from './modules/location/location.module';
 
 @Module({
-  imports: [AppLoggerModule, AppConfigModule, PrismaModule],
+  imports: [AppLoggerModule, AppConfigModule, PrismaModule, LocationModule],
   controllers: [],
   providers: [
     {

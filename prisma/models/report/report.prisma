@@ -19,8 +19,8 @@ model Report {
   expiresAt           DateTime
   outageEventId       String?
 
-  location     Location     @relation(fields: [locationId], references: [id])
-  outageEvent  OutageEvent? @relation(fields: [outageEventId], references: [id])
+  location    Location     @relation(fields: [locationId], references: [id])
+  outageEvent OutageEvent? @relation(fields: [outageEventId], references: [id])
 
   @@index([locationId, expiresAt])
 }

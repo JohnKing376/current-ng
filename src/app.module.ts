@@ -1,16 +1,21 @@
 import { Module } from '@nestjs/common';
-import { AppLoggerModule } from './infrastructure/logger/logger.module';
+import { AppLoggerModule } from '@infrastructure/logger/logger.module';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
-import { AppConfigModule } from './infrastructure/config/config.module';
-import { PrismaModule } from './infrastructure/database/prisma/prisma.module';
+import { AppConfigModule } from '@infrastructure/config/config.module';
+import { PrismaModule } from '@infrastructure/database/prisma/prisma.module';
 import { LocationModule } from './modules/location/location.module';
-import { ReportModule } from './src/modules/report/report.module';
 import { ReportModule } from './modules/report/report.module';
 
 @Module({
-  imports: [AppLoggerModule, AppConfigModule, PrismaModule, LocationModule, ReportModule],
+  imports: [
+    AppLoggerModule,
+    AppConfigModule,
+    PrismaModule,
+    LocationModule,
+    ReportModule,
+  ],
   controllers: [],
   providers: [
     {

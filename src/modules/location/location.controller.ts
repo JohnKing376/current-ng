@@ -16,12 +16,12 @@ export class LocationController {
   @Get()
   @ApiQuery({
     name: 'lng',
-    type: 'string',
+    type: Number,
     description: 'The longitude of the location',
   })
   @ApiQuery({
     name: 'lat',
-    type: 'string',
+    type: Number,
     description: 'The latitude of the location',
   })
   @ZodResponse({

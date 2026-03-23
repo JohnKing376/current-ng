@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { PrismaClient } from '../../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { parse } from 'csv-parse/sync';
+import { PrismaClient } from '../generated/prisma/client';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -26,11 +26,10 @@ async function main() {
     Longitude: string;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  const rows = parse(content, {
+  const rows = parse<CsvRow>(content, {
     columns: true,
     skip_empty_lines: true,
-  }) as CsvRow[];
+  });
 
   const seen = new Set<string>();
 

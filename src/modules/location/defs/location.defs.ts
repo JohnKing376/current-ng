@@ -1,9 +1,6 @@
 import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
-import {
-  LocationSchema,
-  OutageEventSchema,
-} from '../../../generated/schemas/models';
+import { LocationSchema, OutageEventSchema } from '@generated/schemas/models';
 
 const StatusByCoordinatesInputZ = z.object({
   lat: z.coerce.number().min(-90).max(90),
@@ -20,12 +17,14 @@ const StatusByLgaInputZ = z.object({
   lga: z.string(),
   state: z.string(),
 });
+
 export type StatusByLgaInput = z.infer<typeof StatusByLgaInputZ>;
 
-const StatusByLgaQueryZ = z.object({
-  state: z.string(),
-});
-export class StatusByLgaQueryDto extends createZodDto(StatusByLgaQueryZ) {}
+export class StatusByLgaQueryDto extends createZodDto(
+  StatusByLgaInputZ.omit({
+    lga: true,
+  }),
+) {}
 
 const OutageEventPublicZ = OutageEventSchema.omit({
   id: true,
@@ -46,7 +45,7 @@ const LocationStatusZ = LocationSchema.extend({
   populationDensity: true,
 });
 
-export class LocationStatusResponseDto extends createZodDto(
+export class LocationStatusResponse extends createZodDto(
   z.object({
     data: LocationStatusZ,
   }),

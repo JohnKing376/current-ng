@@ -1,7 +1,7 @@
 import { Controller, Get, HttpStatus, Param, Query } from '@nestjs/common';
 import { LocationService } from './location.service';
 import {
-  LocationStatusResponseDto,
+  LocationStatusResponse,
   StatusByCoordinatesDto,
   StatusByLgaQueryDto,
 } from './defs/location.defs';
@@ -14,10 +14,20 @@ export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
   @Get()
+  @ApiQuery({
+    name: 'lng',
+    type: Number,
+    description: 'The longitude of the location',
+  })
+  @ApiQuery({
+    name: 'lat',
+    type: Number,
+    description: 'The latitude of the location',
+  })
   @ZodResponse({
-    type: LocationStatusResponseDto,
+    type: LocationStatusResponse,
     status: HttpStatus.OK,
-    description: 'Get location report with coordinates',
+    description: 'Location Report Status Schema',
   })
   async statusByCoordinates(@Query() query: StatusByCoordinatesDto) {
     return await this.locationService.getStatusByCoordinates(query);
@@ -31,9 +41,9 @@ export class LocationController {
     description: 'The state the LGA belongs to',
   })
   @ZodResponse({
-    type: LocationStatusResponseDto,
+    type: LocationStatusResponse,
     status: HttpStatus.OK,
-    description: 'Get location report with lga',
+    description: 'Location Report Status Schema',
   })
   async statusByLga(
     @Param('lga') lga: string,

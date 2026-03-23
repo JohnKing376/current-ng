@@ -30,7 +30,7 @@ async function bootstrap() {
   );
 
   // API prefix
-  app.setGlobalPrefix('/api/v1');
+  app.setGlobalPrefix('api/v1');
 
   // Swagger Documentation
   const openApiDoc = SwaggerModule.createDocument(

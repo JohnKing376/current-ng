@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { parse } from 'csv-parse/sync';
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient } from '@generated/prisma/client';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });

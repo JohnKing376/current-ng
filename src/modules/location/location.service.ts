@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../infrastructure/database/prisma/prisma.service';
+import { PinoLogger } from 'nestjs-pino';
+import type { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import type {
   StatusByCoordinatesInput,
   StatusByLgaInput,
 } from './defs/location.defs';
-import { PinoLogger } from 'nestjs-pino';
 
 @Injectable()
 export class LocationService {

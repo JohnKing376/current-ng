@@ -1,12 +1,12 @@
 import { Controller, Get, HttpStatus, Param, Query } from '@nestjs/common';
+import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
 import { LocationService } from './location.service';
 import {
   LocationStatusResponse,
   StatusByCoordinatesDto,
   StatusByLgaQueryDto,
 } from './defs/location.defs';
-import { ZodResponse } from 'nestjs-zod';
-import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Location')
 @Controller('location')

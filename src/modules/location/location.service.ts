@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PinoLogger } from 'nestjs-pino';
 import type { PrismaService } from '@infrastructure/database/prisma/prisma.service';
+import { PinoLogger } from 'nestjs-pino';
 import type {
   StatusByCoordinatesInput,
   StatusByLgaInput,
@@ -76,5 +76,64 @@ export class LocationService {
     return {
       data: location,
     };
+  }
+
+  async resolveLocationByCoordinates(input: StatusByCoordinatesInput) {
+    const { lat, lng } = input;
+
+    const locations = await this.prisma.location.findMany({
+      select: {
+        lat: true,
+        lng: true,
+        lga: true,
+        state: true,
+      },
+    });
+
+    const range = 0.1;
+
+    const nearbyLocations = locations.filter(
+      (loc) =>
+        Math.abs(loc.lat - lat) < range && Math.abs(loc.lng - lng) < range,
+    );
+
+    const candidates = nearbyLocations.length > 0 ? nearbyLocations : locations;
+
+    let closest = candidates[0];
+
+    let minDistance = this.getDistance(lat, lng, closest.lat, closest.lng);
+
+    for (const location of nearbyLocations) {
+      const distance = this.getDistance(lat, lng, location.lat, location.lng);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = location;
+      }
+    }
+
+    return closest;
+  }
+
+  private getDistance(
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number,
+  ): number {
+    const R = 6371; // Earth's radius in km
+    const dLat = this.toRad(lat2 - lat1);
+    const dLng = this.toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRad(lat1)) *
+        Math.cos(this.toRad(lat2)) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  private toRad(value: number): number {
+    return (value * Math.PI) / 180;
   }
 }

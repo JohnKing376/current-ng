@@ -16,6 +16,7 @@ const CreateReportByCoordInputSchemaZ = z.object({
 });
 
 const ReportOutputSchemaZ = ReportSchema.omit({
+  id: true,
   outageEventId: true,
   reporterFingerprint: true,
   trustScore: true,
@@ -33,6 +34,8 @@ const CreateReportOutputSchema = ReportOutputSchemaZ.extend({
 export class ReportOutputSchema extends createZodDto(
   CreateReportOutputSchema,
 ) {}
+
+export type TReportResponse = z.infer<typeof CreateReportOutputSchema>;
 
 export class CreateReportByLgaDto extends createZodDto(
   CreateReportByLgaInputSchemaZ,

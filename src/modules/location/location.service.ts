@@ -83,6 +83,7 @@ export class LocationService {
 
     const locations = await this.prisma.location.findMany({
       select: {
+        id: true,
         lat: true,
         lng: true,
         lga: true,

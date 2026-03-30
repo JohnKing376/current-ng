@@ -27,6 +27,7 @@ const ReportOutputSchemaZ = ReportSchema.omit({
 
 const CreateReportOutputSchema = ReportOutputSchemaZ.extend({
   outageConfirmed: z.boolean().default(false),
+  outageResolved: z.boolean().default(false),
   lga: z.string(),
   state: z.string(),
 });
@@ -41,7 +42,7 @@ export class CreateReportByLgaDto extends createZodDto(
   CreateReportByLgaInputSchemaZ,
 ) {}
 
-export class CreateReportByCoord extends createZodDto(
+export class CreateReportByCoordDto extends createZodDto(
   CreateReportByCoordInputSchemaZ,
 ) {}
 

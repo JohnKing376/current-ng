@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { PrismaService } from '@infrastructure/database/prisma/prisma.service';
+import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
 import { PinoLogger } from 'nestjs-pino';
 import type {
   StatusByCoordinatesInput,
@@ -43,12 +43,14 @@ export class LocationService {
   }
 
   async getStatusByCoordinates(input: StatusByCoordinatesInput) {
-    const { lng, lat } = input;
+    const resolvedLocation = await this.resolveLocationByCoordinates(input);
 
-    const location = await this.prisma.location.findFirst({
+    const location = await this.prisma.location.findUnique({
       where: {
-        lng,
-        lat,
+        lga_state: {
+          lga: resolvedLocation.lga,
+          state: resolvedLocation.state,
+        },
       },
       include: {
         outageEvents: {
@@ -65,11 +67,11 @@ export class LocationService {
 
     if (!location) {
       this.logger.error('Location not found', {
-        lng,
-        lat,
+        lng: input.lng,
+        lat: input.lat,
       });
       throw new NotFoundException(
-        `coordinates with latitude: ${lat} and longitude ${lng} not found`,
+        `coordinates with latitude: ${input.lat} and longitude ${input.lng} not found`,
       );
     }
 
@@ -91,6 +93,11 @@ export class LocationService {
       },
     });
 
+    if (locations.length === 0) {
+      this.logger.error('No locations in database');
+      throw new NotFoundException('No locations available');
+    }
+
     const range = 0.1;
 
     const nearbyLocations = locations.filter(
@@ -101,15 +108,24 @@ export class LocationService {
     const candidates = nearbyLocations.length > 0 ? nearbyLocations : locations;
 
     let closest = candidates[0];
-
     let minDistance = this.getDistance(lat, lng, closest.lat, closest.lng);
 
-    for (const location of nearbyLocations) {
+    for (const location of candidates) {
       const distance = this.getDistance(lat, lng, location.lat, location.lng);
       if (distance < minDistance) {
         minDistance = distance;
         closest = location;
       }
+    }
+
+    const MAX_DISTANCE_KM = 10;
+    if (minDistance > MAX_DISTANCE_KM) {
+      this.logger.warn('No nearby location within 10 km', {
+        lat,
+        lng,
+        minDistance,
+      });
+      throw new NotFoundException('No nearby location found within 10 km');
     }
 
     return closest;

@@ -43,7 +43,7 @@ export class ReportController {
   })
   @ApiBody({
     type: CreateReportByCoordDto,
-    description: 'The properties required to report by an LGA',
+    description: 'The properties required to report by location coordinates',
   })
   @ZodResponse({
     status: HttpStatus.CREATED,

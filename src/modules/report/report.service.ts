@@ -4,9 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma/prisma.service';
-import type { PinoLogger } from 'nestjs-pino';
+import { PinoLogger } from 'nestjs-pino';
 import { LocationService } from '../location/location.service';
 import type {
+  CreateReportByCoordInput,
   CreateReportByLgaInputSchema,
   TReportResponse,
 } from './defs/report.defs';
@@ -37,6 +38,7 @@ export class ReportService {
     const { lga, state, status } = input;
 
     const location = await this.locationService.getStatusByLga({ lga, state });
+
     if (!location) {
       this.logger.error('Location not found', { lga, state });
       throw new NotFoundException('Location not found');
@@ -54,7 +56,7 @@ export class ReportService {
       reporterFingerprint,
     );
 
-    const outage = await this.checkIfOutageConfirmed(location.data.id);
+    const outage = await this.evaluateLocationState(location.data.id);
 
     await this.attachOutageId(report.id, outage.outageId);
 
@@ -64,6 +66,45 @@ export class ReportService {
       lga: location.data.lga,
       state: location.data.state,
       outageConfirmed: outage.status,
+      outageResolved: false,
+    };
+  }
+
+  async reportByCoordinates(
+    input: CreateReportByCoordInput,
+    reporterFingerprint: string,
+  ): Promise<TReportResponse> {
+    const { lat, lng, status } = input;
+
+    const location = await this.locationService.resolveLocationByCoordinates({
+      lat,
+      lng,
+    });
+
+    if (!location) {
+      this.logger.error('Location not found', { lat, lng });
+      throw new NotFoundException('Location not found');
+    }
+
+    await this.checkDuplicateReport(location.id, status, reporterFingerprint);
+
+    const report = await this.createReport(
+      location.id,
+      status,
+      reporterFingerprint,
+    );
+
+    const outage = await this.evaluateLocationState(location.id);
+
+    await this.attachOutageId(report.id, outage.outageId);
+
+    return {
+      status,
+      source: Source.USER,
+      lga: location.lga,
+      state: location.state,
+      outageConfirmed: outage.status,
+      outageResolved: false,
     };
   }
 
@@ -114,8 +155,7 @@ export class ReportService {
 
   private async attachOutageId(reportId: string, outageId: string | null) {
     if (!outageId) {
-      this.logger.error(`outageId not found for report: ${reportId}`);
-      throw new NotFoundException('outageId not found');
+      return;
     }
 
     await this.prisma.report.update({
@@ -124,58 +164,91 @@ export class ReportService {
     });
   }
 
-  private async confidenceEngine(locationId: string): Promise<ConfidenceLevel> {
+  private async getStatusScores(locationId: string) {
     const reports = await this.prisma.report.findMany({
-      where: { locationId, status: 'OFF', expiresAt: { gte: new Date() } },
-      select: { reporterFingerprint: true, trustScore: true },
+      where: {
+        locationId,
+        expiresAt: { gte: new Date() },
+      },
+      select: {
+        reporterFingerprint: true,
+        trustScore: true,
+        status: true,
+      },
       orderBy: { reportedAt: 'desc' },
     });
 
-    const uniqueScores = new Map<string, number>();
+    const uniqueReports = new Map<
+      string,
+      { trustScore: number; status: Status }
+    >();
+
     for (const r of reports) {
-      if (!uniqueScores.has(r.reporterFingerprint))
-        uniqueScores.set(r.reporterFingerprint, r.trustScore);
+      if (!uniqueReports.has(r.reporterFingerprint)) {
+        uniqueReports.set(r.reporterFingerprint, {
+          trustScore: r.trustScore,
+          status: r.status,
+        });
+      }
     }
 
-    const totalTrust = [...uniqueScores.values()].reduce(
-      (sum, s) => sum + s,
-      0,
-    );
+    let offScore = 0;
+    let onScore = 0;
 
-    if (totalTrust >= CONFIDENCE_HIGH) {
+    for (const r of uniqueReports.values()) {
+      if (r.status === 'OFF') offScore += r.trustScore;
+      if (r.status === 'ON') onScore += r.trustScore;
+    }
+
+    return { offScore, onScore };
+  }
+
+  private getConfidenceLevel(score: number): ConfidenceLevel {
+    if (score >= CONFIDENCE_HIGH) {
       return 'HIGH';
-    } else if (totalTrust >= CONFIDENCE_MEDIUM) {
+    } else if (score >= CONFIDENCE_MEDIUM) {
       return 'MEDIUM';
     } else {
       return 'LOW';
     }
   }
 
-  private async checkIfOutageConfirmed(locationId: string) {
-    const activeReports = await this.prisma.report.findMany({
-      where: { locationId, status: 'OFF', expiresAt: { gt: new Date() } },
-      select: { reporterFingerprint: true },
-    });
-
-    const uniqueReporterCount = new Set(
-      activeReports.map((r) => r.reporterFingerprint),
-    ).size;
+  private async evaluateLocationState(locationId: string) {
+    const { offScore, onScore } = await this.getStatusScores(locationId);
 
     const existingOutage = await this.prisma.outageEvent.findFirst({
       where: { locationId, resolvedAt: null },
       select: { id: true },
     });
 
-    if (uniqueReporterCount >= OUTAGE_THRESHOLD) {
-      if (existingOutage) return { outageId: existingOutage.id, status: true };
+    if (offScore >= OUTAGE_THRESHOLD && offScore > onScore) {
+      if (existingOutage) {
+        return { outageId: existingOutage.id, status: true };
+      }
 
-      const confidence = await this.confidenceEngine(locationId);
       const outage = await this.prisma.outageEvent.create({
-        data: { locationId, confidence, reportsCount: uniqueReporterCount },
+        data: {
+          locationId,
+          confidence: this.getConfidenceLevel(offScore),
+          reportsCount: offScore,
+        },
         select: { id: true },
       });
 
       return { outageId: outage.id, status: true };
+    }
+
+    if (onScore >= OUTAGE_THRESHOLD && onScore > offScore) {
+      if (existingOutage) {
+        await this.prisma.outageEvent.update({
+          where: { id: existingOutage.id },
+          data: { resolvedAt: new Date() },
+        });
+
+        return { outageId: null, status: false };
+      }
+
+      return { outageId: null, status: false };
     }
 
     return existingOutage

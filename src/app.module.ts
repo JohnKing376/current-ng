@@ -7,7 +7,6 @@ import { AppConfigModule } from '@infrastructure/config/config.module';
 import { PrismaModule } from '@infrastructure/database/prisma/prisma.module';
 import { LocationModule } from './modules/location/location.module';
 import { ReportModule } from './modules/report/report.module';
-import { ReportService } from './src/modules/report/report.service';
 
 @Module({
   imports: [
@@ -31,7 +30,6 @@ import { ReportService } from './src/modules/report/report.service';
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
-    ReportService,
   ],
 })
 export class AppModule {}

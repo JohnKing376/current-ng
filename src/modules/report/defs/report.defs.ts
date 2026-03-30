@@ -11,8 +11,8 @@ const CreateReportByLgaInputSchemaZ = z.object({
 
 const CreateReportByCoordInputSchemaZ = z.object({
   status: z.enum(Status),
-  lat: z.coerce.number(),
-  lng: z.coerce.number(),
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
 });
 
 const ReportOutputSchemaZ = ReportSchema.omit({
